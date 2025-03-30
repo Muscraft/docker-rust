@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import argparse
 import configparser
 from collections import namedtuple
 from urllib import request
@@ -287,16 +288,31 @@ def usage():
     sys.exit(1)
 
 if __name__ == "__main__":
-    if len(sys.argv) != 2:
-        usage()
+    parser = argparse.ArgumentParser()
+    subparsers = parser.add_subparsers(dest='subcommand', required=True)
 
-    task = sys.argv[1]
-    if task == "update":
+    update_parser = subparsers.add_parser('update')
+    update_parser.add_argument('--rust', type=str, default=rust_version)
+    update_parser.add_argument('--rustup', type=str, default=rustup_version)
+
+    generate_stackbrew_library_parser = subparsers.add_parser('generate-stackbrew-library')
+
+    args = vars(parser.parse_args())
+    if args['subcommand'] == "update":
+        if args['rust'] != rust_version or args['rustup'] != rustup_version:
+            rust_version = args['rust']
+            stable = Channel("stable", rust_version)
+            rustup_version = args['rustup']
+
+            with open('versions.ini', 'w') as file:
+                config['versions'] = {'rust': args['rust'], 'rustup': args['rustup']}
+                config.write(file)
+
         update_debian()
         update_alpine()
         update_ci()
         update_nightly_ci()
-    elif task == "generate-stackbrew-library":
+    elif args['subcommand'] == "generate-stackbrew-library":
         generate_stackbrew_library()
     else:
         usage()
