@@ -1,0 +1,106 @@
+name: Update Rust Version
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Rust version'
+        required: true
+
+jobs:
+#  build:
+#    runs-on: ubuntu-latest
+#    env:
+#      RUST_VERSION: ${{ github.event.inputs.version }}
+#    strategy:
+#      matrix:
+#        include:
+##VERSIONS
+#          - name: bullseye
+#            variant: bullseye
+#          - name: slim-bullseye
+#            variant: bullseye/slim
+#          - name: bookworm
+#            variant: bookworm
+#          - name: slim-bookworm
+#            variant: bookworm/slim
+#          - name: alpine3.20
+#            variant: alpine3.20
+#          - name: alpine3.21
+#            variant: alpine3.21
+##VERSIONS
+#    name: ${{ matrix.name }}
+#    steps:
+#      - uses: actions/checkout@v4
+#        with:
+#          ref: ${{ github.ref }}
+#      - run: python3 x.py update --rust $RUST_VERSION
+#      - run: git clone https://github.com/docker-library/official-images.git ~/official-images
+#      - run: docker build -t rust:$RUST_VERSION-${{ matrix.name }} stable/${{ matrix.variant }}
+#      - run: ~/official-images/test/run.sh rust:$RUST_VERSION-${{ matrix.name }}
+#      - run: docker images
+
+  create-pr:
+    name: 'Create PR'
+    runs-on: ubuntu-latest
+    if: github.repository_owner == 'Muscraft' && github.ref == 'refs/heads/testing'
+#    needs: build
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - name: Checkout the docker-rust repo
+        uses: actions/checkout@v4
+        with:
+          # `path` is needed as we are checking out multiple repos
+          path: docker-rust
+          ref: ${{ github.ref }}
+          token: ${{ secrets.GH_TOKEN }}
+
+      - name: Checkout the official-images repo
+        uses: actions/checkout@v4
+        with:
+          # `path` is needed as we are checking out multiple repos
+          path: official-images
+          # docker-library/official-images specifies that we base every new PR
+          # off of their master branch
+          repository: Muscraft/official-images
+          ref: master
+
+      - name: Setup git config
+        run: |
+          git config --global user.name "${{ github.actor }}"
+          git config --global user.email "github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>"
+
+      - name: Update Dockerfiles
+        working-directory: docker-rust
+        run: |
+          python3 x.py update --rust ${{ github.event.inputs.version }}
+
+      - name: Commit changes
+        working-directory: docker-rust
+        run: |
+          git add .
+          git commit -m "chore: Update Rust to ${{ github.event.inputs.version }}"
+
+      - name: Push changes to docker-rust
+        working-directory: docker-rust
+        run: |
+          BRANCH="${{ github.ref_name }}-push"
+          git switch -c $BRANCH
+          git push -u origin $BRANCH
+
+      - name: Generate Stackbrew for diff
+        working-directory: docker-rust
+        run: |
+          python3 x.py generate-stackbrew-library > ../official-images/library/rust
+
+      - name: Create PR in official-images
+        uses: peter-evans/create-pull-request@v7.0.8
+        with:
+          token: ${{ secrets.GH_TOKEN }}
+          push-to-fork: Muscraft/official-images
+          path: official-images
+          branch: rust-${{ github.event.inputs.version }}
+          commit-message: "Update Rust to ${{ github.event.inputs.version }}"
+          title: "Update Rust to ${{ github.event.inputs.version }}"

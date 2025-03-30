@@ -126,28 +126,30 @@ def update_alpine():
             write_file(f"{channel.name}/alpine{version}/Dockerfile", rendered)
 
 def update_ci():
-    file = ".github/workflows/ci.yml"
-    config = read_file(file)
+    files = [(".github/workflows/ci.yml", True), (".github/workflows/update-version.yml", False)]
+    for (path, needs_rust_version) in files:
+        workflow_file = read_file(path)
 
-    marker = "#RUST_VERSION\n"
-    split = config.split(marker)
-    rendered = split[0] + marker + f"      RUST_VERSION: {stable.rust_version}\n" + marker + split[2]
+        if needs_rust_version:
+            marker = "#RUST_VERSION\n"
+            split = workflow_file.split(marker)
+            workflow_file = split[0] + marker + f"      RUST_VERSION: {stable.rust_version}\n" + marker + split[2]
 
-    versions = ""
-    for variant in debian_variants:
-        versions += f"          - name: {variant.name}\n"
-        versions += f"            variant: {variant.name}\n"
-        versions += f"          - name: slim-{variant.name}\n"
-        versions += f"            variant: {variant.name}/slim\n"
+        versions = ""
+        for variant in debian_variants:
+            versions += f"          - name: {variant.name}\n"
+            versions += f"            variant: {variant.name}\n"
+            versions += f"          - name: slim-{variant.name}\n"
+            versions += f"            variant: {variant.name}/slim\n"
 
-    for version in alpine_versions:
-        versions += f"          - name: alpine{version}\n"
-        versions += f"            variant: alpine{version}\n"
+        for version in alpine_versions:
+            versions += f"          - name: alpine{version}\n"
+            versions += f"            variant: alpine{version}\n"
 
-    marker = "#VERSIONS\n"
-    split = rendered.split(marker)
-    rendered = split[0] + marker + versions + marker + split[2]
-    write_file(file, rendered)
+        marker = "#VERSIONS\n"
+        split = workflow_file.split(marker)
+        workflow_file = split[0] + marker + versions + marker + split[2]
+        write_file(path, workflow_file)
 
 def update_nightly_ci():
     file = ".github/workflows/nightly.yml"
