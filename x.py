@@ -1,15 +1,20 @@
 #!/usr/bin/env python3
 
+import configparser
 from collections import namedtuple
 from urllib import request
 import os
 import subprocess
 import sys
 
-rustup_version = "1.28.1"
+config = configparser.ConfigParser()
+config.read('versions.ini')
+
+rust_version = config['versions'].get('rust')
+rustup_version = config['versions'].get('rustup')
 
 Channel = namedtuple("Channel", ["name", "rust_version"])
-stable = Channel("stable", "1.85.1")
+stable = Channel("stable", rust_version)
 nightly = Channel("nightly", "nightly")
 supported_channels = [
     stable,
