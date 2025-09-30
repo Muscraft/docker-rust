@@ -1,0 +1,72 @@
+name: Test CI
+
+defaults:
+  run:
+    shell: 'bash -Eeuo pipefail -x {0}'
+
+concurrency:
+  group: ${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  IMAGE_NAME: rust-test
+
+on:
+  pull_request:
+  push:
+    branches:
+      - master
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  generate-matrix:
+    name: Generate Matrix
+    runs-on: ubuntu-latest
+    outputs:
+      matrix_data: ${{ steps.generate.outputs.matrix_data }}
+    steps:
+      - uses: actions/checkout@v5
+      - name: Run script to generate matrix
+        id: generate
+        run: python3 generate_matrix.py
+
+  test:
+    needs: generate-matrix
+    runs-on: ubuntu-latest
+    strategy:
+      matrix: ${{ fromJson(needs.generate-matrix.outputs.matrix_data) }}
+    name: ${{ matrix.name }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Define platform-specific image tag
+        id: image_tag
+        run: echo "tag=${{ env.IMAGE_NAME }}:${{ matrix.variant }}-${{ matrix.arch }}" >> $GITHUB_OUTPUT
+
+      - name: Build image for testing
+        uses: docker/build-push-action@v6
+        with:
+          context: ${{ matrix.context }}
+          load: true
+          platforms: ${{ matrix.platform }}
+          tags: ${{ steps.image_tag.outputs.tag }}
+
+      - name: Checkout the official-images repo
+        uses: actions/checkout@v5
+        with:
+          # `path` is needed as we are checking out multiple repos
+          path: official-images
+          repository: docker-library/official-images
+
+      - name: Test the image
+        run: ./official-images/test/run.sh ${{ steps.image_tag.outputs.tag }}
