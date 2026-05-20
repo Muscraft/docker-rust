@@ -157,11 +157,13 @@ def render_template(
     rendered_path
 ):
     template = read_file(template_path)
-    rendered = template \
-        .replace("%%TAG%%", docker_tag) \
-        .replace("%%RUST-VERSION%%", rust_version) \
-        .replace("%%RUSTUP-VERSION%%", rustup_version) \
+    rendered = (
+        template
+        .replace("%%TAG%%", docker_tag)
+        .replace("%%RUST-VERSION%%", rust_version)
+        .replace("%%RUSTUP-VERSION%%", rustup_version)
         .replace("%%ARCH-CASE%%", arch_cases)
+    )
     write_file(rendered_path, rendered)
 
 def update_ci():
