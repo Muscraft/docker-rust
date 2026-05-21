@@ -93,6 +93,25 @@ jobs:
           username: rustopsbot
           password: ${{ secrets.DOCKER_HUB_TOKEN }}
 
+      - name: Compute nightly date
+        id: date
+        run: echo "date=$(date -u +%Y-%m-%d)" >> "$GITHUB_OUTPUT"
+
+      - name: Build dated tag list
+        id: dated_tags
+        env:
+          BASE_TAGS: ${{ matrix.tags }}
+          DATE: ${{ steps.date.outputs.date }}
+        run: |
+          {
+            echo "tags<<EOF"
+            while IFS= read -r tag; do
+              [ -z "$tag" ] && continue
+              echo "type=raw,value=${tag}-${DATE}"
+            done <<< "$BASE_TAGS"
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
+
       - name: Docker Metadata
         id: meta
         uses: docker/metadata-action@v5
@@ -100,7 +119,9 @@ jobs:
           images: |
             rustlang/rust
             ghcr.io/rust-lang/rust
-          tags: ${{ matrix.tags }}
+          tags: |
+            ${{ matrix.tags }}
+            ${{ steps.dated_tags.outputs.tags }}
 
       - name: Build and push image
         uses: docker/build-push-action@v6
@@ -108,5 +129,7 @@ jobs:
           context: ${{ matrix.context }}
           platforms: ${{ matrix.platforms }}
           push: ${{ github.event_name != 'pull_request' }}
+          build-args: |
+            RUST_VERSION=nightly-${{ steps.date.outputs.date }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
