@@ -156,11 +156,20 @@ def render_template(
     arch_cases,
     rendered_path
 ):
+    if rust_version == "nightly":
+        rust_version_arg = "ARG RUST_VERSION=nightly\n"
+        rust_version_value = "${RUST_VERSION}"
+    else:
+        rust_version_arg = ""
+        rust_version_value = rust_version
+
     template = read_file(template_path)
     rendered = (
         template
         .replace("%%TAG%%", docker_tag)
-        .replace("%%RUST-VERSION%%", rust_version)
+        # We match with `\n` here so that the line is removed entirely if the argument is not needed
+        .replace("%%RUST-VERSION-ARG%%\n", rust_version_arg)
+        .replace("%%RUST-VERSION-VALUE%%", rust_version_value)
         .replace("%%RUSTUP-VERSION%%", rustup_version)
         .replace("%%ARCH-CASE%%", arch_cases)
     )

@@ -2,10 +2,11 @@ FROM debian:%%TAG%%-slim
 
 LABEL org.opencontainers.image.source=https://github.com/rust-lang/docker-rust
 
+%%RUST-VERSION-ARG%%
 ENV RUSTUP_HOME=/usr/local/rustup \
     CARGO_HOME=/usr/local/cargo \
     PATH=/usr/local/cargo/bin:$PATH \
-    RUST_VERSION=%%RUST-VERSION%%
+    RUST_VERSION=%%RUST-VERSION-VALUE%%
 
 RUN set -eux; \
     \
