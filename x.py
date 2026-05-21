@@ -257,23 +257,27 @@ def update_nightly_ci():
             platforms.append(f"{arch.qemu}")
         platforms = ",".join(platforms)
 
-        tags = [f"nightly-{release.name}"]
+        release_tag = f"nightly-{release.name}"
+        umbrella_tags = []
         if release.name == latest_debian_release:
-            tags.append("nightly")
+            umbrella_tags = ["nightly"]
 
         versions += f"          - name: {release.name}\n"
         versions += f"            context: nightly/{release.name}\n"
         versions += f"            platforms: {platforms}\n"
         versions += "            tags: |\n"
-        for tag in tags:
+        versions += f"              {release_tag}\n"
+        for tag in umbrella_tags:
             versions += f"              {tag}\n"
 
         versions += f"          - name: slim-{release.name}\n"
         versions += f"            context: nightly/{release.name}/slim\n"
         versions += f"            platforms: {platforms}\n"
         versions += "            tags: |\n"
-        for tag in tags:
-            versions += f"              {tag}-slim\n"
+        versions += f"              {release_tag}-slim\n"
+        for tag in umbrella_tags:
+            slim_tag = f"{tag}-slim"
+            versions += f"              {slim_tag}\n"
 
     for version in alpine_versions:
         platforms = []
@@ -281,15 +285,17 @@ def update_nightly_ci():
             platforms.append(f"{arch.qemu}")
         platforms = ",".join(platforms)
 
-        tags = [f"nightly-alpine{version}"]
+        release_tag = f"nightly-alpine{version}"
+        umbrella_tags = []
         if version == latest_alpine_version:
-            tags.append("nightly-alpine")
+            umbrella_tags = ["nightly-alpine"]
 
         versions += f"          - name: alpine{version}\n"
         versions += f"            context: nightly/alpine{version}\n"
         versions += f"            platforms: {platforms}\n"
         versions += "            tags: |\n"
-        for tag in tags:
+        versions += f"              {release_tag}\n"
+        for tag in umbrella_tags:
             versions += f"              {tag}\n"
 
     marker = "#VERSIONS\n"
