@@ -96,7 +96,25 @@ jobs:
 
       - name: Compute nightly date
         id: date
-        run: echo "date=$(date -u +%Y-%m-%d)" >> "$GITHUB_OUTPUT"
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+        run: |
+          set -euo pipefail
+          DATE=$(date -u +%Y-%m-%d)
+          URL="https://static.rust-lang.org/dist/${DATE}/channel-rust-nightly.toml"
+          if ! curl -fsI -o /dev/null "$URL"; then
+            case "${EVENT_NAME}" in
+              push|pull_request)
+                echo "Today's nightly manifest is not yet published; falling back to yesterday." >&2
+                DATE=$(date -u -d 'yesterday' +%Y-%m-%d)
+                ;;
+              *)
+                echo "Today's nightly manifest is not yet published; refusing to publish a stale nightly." >&2
+                exit 1
+                ;;
+            esac
+          fi
+          echo "date=${DATE}" >> "$GITHUB_OUTPUT"
 
       - name: Build dated tag list
         id: dated_tags
