@@ -278,6 +278,7 @@ def update_nightly_ci():
         versions += f"              {release_tag}\n"
         for tag in umbrella_tags:
             versions += f"              {tag}\n"
+            versions += f"              type=raw,value={tag}-{{{{date 'YYYY-MM-DD'}}}}\n"
 
         versions += f"          - name: slim-{release.name}\n"
         versions += f"            context: nightly/{release.name}/slim\n"
@@ -287,6 +288,7 @@ def update_nightly_ci():
         for tag in umbrella_tags:
             slim_tag = f"{tag}-slim"
             versions += f"              {slim_tag}\n"
+            versions += f"              type=raw,value={slim_tag}-{{{{date 'YYYY-MM-DD'}}}}\n"
 
     for version in alpine_versions:
         platforms = []
@@ -306,6 +308,7 @@ def update_nightly_ci():
         versions += f"              {release_tag}\n"
         for tag in umbrella_tags:
             versions += f"              {tag}\n"
+            versions += f"              type=raw,value={tag}-{{{{date 'YYYY-MM-DD'}}}}\n"
 
     marker = "#VERSIONS\n"
     split = config.split(marker)
