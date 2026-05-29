@@ -7,10 +7,11 @@ RUN apk add --no-cache \
         musl-dev \
         gcc
 
+%%RUST-VERSION-ARG%%
 ENV RUSTUP_HOME=/usr/local/rustup \
     CARGO_HOME=/usr/local/cargo \
     PATH=/usr/local/cargo/bin:$PATH \
-    RUST_VERSION=%%RUST-VERSION%%
+    RUST_VERSION=%%RUST-VERSION-VALUE%%
 
 RUN set -eux; \
     \

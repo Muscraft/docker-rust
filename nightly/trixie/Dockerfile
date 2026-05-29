@@ -2,10 +2,11 @@ FROM buildpack-deps:trixie
 
 LABEL org.opencontainers.image.source=https://github.com/rust-lang/docker-rust
 
+ARG RUST_VERSION=nightly
 ENV RUSTUP_HOME=/usr/local/rustup \
     CARGO_HOME=/usr/local/cargo \
     PATH=/usr/local/cargo/bin:$PATH \
-    RUST_VERSION=nightly
+    RUST_VERSION=${RUST_VERSION}
 
 RUN set -eux; \
     \
