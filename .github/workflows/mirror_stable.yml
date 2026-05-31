@@ -9,7 +9,7 @@ on:
 jobs:
   mirror:
     name: DockerHub mirror
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-latest
     if: github.repository == 'rust-lang/docker-rust'
     permissions:
       contents: read
