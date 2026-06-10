@@ -37,6 +37,12 @@ jobs:
               1.96-alpine3.23
               1.96.0-alpine3.23
               alpine3.23
+          - name: alpine3.24
+            tags: |
+              1-alpine3.24
+              1.96-alpine3.24
+              1.96.0-alpine3.24
+              alpine3.24
               1-alpine
               1.96-alpine
               1.96.0-alpine
