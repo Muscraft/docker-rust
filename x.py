@@ -64,10 +64,11 @@ alpine_arches = [
     AlpineArch("ppc64le", "ppc64le", "linux/ppc64le", "powerpc64le-unknown-linux-musl"),
 ]
 
-latest_alpine_version = "3.23"
+latest_alpine_version = "3.24"
 alpine_versions = [
     "3.21",
     "3.22",
+    "3.23",
     latest_alpine_version,
 ]
 
